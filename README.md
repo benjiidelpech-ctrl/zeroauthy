@@ -423,6 +423,7 @@ Releases are manual: a tagged commit pushed to the `release` branch, then a main
 ## Development
 
 ```bash
+make check          # the ci workflow's test job: gofmt, vet, race tests, build, generated code (commit first)
 make test           # unit + contract + storage conformance tests (memory and SQLite)
 make test-sql       # SQL driver tests against PostgreSQL 17 and MySQL 8.4 containers (needs podman or docker)
 make generate       # regenerate code from api/authentication.yaml and api/management.yaml

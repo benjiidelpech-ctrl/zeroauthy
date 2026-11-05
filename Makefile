@@ -1,4 +1,4 @@
-.PHONY: e2e-passwordless e2e-mfa e2e-events e2e-logs e2e-organizations-ii e2e-organizations build test test-sql lint generate check-sources e2e e2e-actions e2e-actions-ii e2e-rbac e2e-email-accounts e2e-social e2e-deploy e2e-signing e2e-email e2e-branding e2e-domains conformance console
+.PHONY: e2e-passwordless e2e-mfa e2e-events e2e-logs e2e-organizations-ii e2e-organizations build test test-sql lint generate check-sources check e2e e2e-actions e2e-actions-ii e2e-rbac e2e-email-accounts e2e-social e2e-deploy e2e-signing e2e-email e2e-branding e2e-domains conformance console
 
 build:
 	CGO_ENABLED=0 go build -trimpath -o bin/zeroauthy ./cmd/zeroauthy
@@ -12,6 +12,19 @@ test-sql:
 
 lint:
 	go vet ./...
+
+# The ci workflow's test job, step for step, so it can run before a pull
+# request (CI itself only starts by hand). Like CI, the last step needs a
+# committed tree: it fails when go generate changes any file. As in CI, tests
+# that need Node.js fail rather than skip when it is missing or too old (CI
+# uses Node 26); ZA_REQUIRE_NODE=0 lets them skip.
+ZA_REQUIRE_NODE ?= 1
+check:
+	test -z "$$(gofmt -l .)" || (gofmt -l . && exit 1)
+	go vet ./...
+	ZA_REQUIRE_NODE=$(ZA_REQUIRE_NODE) go test -race -timeout=60m ./...
+	CGO_ENABLED=0 go build ./cmd/zeroauthy
+	go generate ./... && git diff --exit-code
 
 generate:
 	go generate ./...
